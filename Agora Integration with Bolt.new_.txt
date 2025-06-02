@@ -1,0 +1,822 @@
+﻿Strategic Blueprint for a Production-Ready Agora.io Classroom Web-App Prompt on Bolt.new
+Introduction:
+This report outlines a structured, phased approach to generate a robust and accurate Bolt.new prompt for developing an interactive online classroom web application powered by Agora.io. The core objective is to ensure seamless integration of Agora's Interactive Live Streaming, Flexible Classroom features, Real-time Chat, and Interactive Whiteboard functionalities. A critical focus will be placed on establishing a production-ready Node.js backend for secure Agora Dynamic Key generation. All instructions, including essential code snippets, will be meticulously detailed within the prompt, adhering to Bolt.new's operational constraint of no external documentation access. This blueprint prioritizes accuracy, clarity, and the architectural considerations necessary for a production-grade deployment.
+Section 1: Bolt.new Prompting Strategy
+Developing complex applications with AI-powered platforms like Bolt.new necessitates a strategic approach to prompting. Given Bolt.new's operational characteristics, a methodical and iterative strategy is crucial for achieving accurate and production-ready results.
+* 1.1 Phased Development Approach for Bolt.new
+Bolt.new's best practices explicitly recommend breaking down complex tasks into smaller, manageable pieces.1 The platform advises that the AI should be asked to perform one specific action at a time, followed by a verification of its functionality, before proceeding to the next feature.1 This iterative methodology is paramount for a multi-faceted integration like the proposed Agora.io classroom application, which involves several distinct SDKs and a custom backend component. A monolithic prompt attempting to define the entire application's architecture and all integrations simultaneously would likely overwhelm Bolt.new, potentially leading to incomplete or erroneous code generation. By segmenting the prompt, the AI's ability to focus on specific tasks is enhanced, thereby increasing the probability of accurate and functional output for each part of the application.
+Furthermore, Bolt.new offers the capability to customize both project-specific and global system prompts.1 The project prompt provides contextual information relevant to the current project, while the system prompt dictates the AI's general behavior across all projects.1 This feature is invaluable for establishing overarching guidelines for code generation. For a production-ready application, maintaining consistency in coding standards, architectural patterns, and error handling mechanisms is paramount. Utilizing these meta-prompts allows for the instillation of these requirements from the project's inception, ensuring a cohesive and high-quality codebase. For example, a project prompt could instruct Bolt.new to "Always prioritize secure, scalable, and performant web applications using modern JavaScript frameworks," ensuring adherence to production-ready standards throughout the development process.
+The initial prompt must clearly define the overarching application architecture, including the chosen tools and frameworks, before delving into individual components and features.1 This foundational step guides Bolt.new in structuring the project correctly. For the frontend, a modern JavaScript framework such as React or Vue is highly suitable for building interactive web applications, aligning with Agora's SDK examples that demonstrate usage with these frameworks.2 Specifying a framework will enable Bolt.new to generate the appropriate boilerplate and project structure efficiently.7 For the backend, Node.js is explicitly required for dynamic key generation, a task well-supported by Agora's token generation tools and samples.8
+The need for granular prompting in complex integrations arises from the inherent limitations of even advanced AI models when faced with highly multi-faceted requests. The user's query involves integrating multiple distinct and complex SDKs (Live Streaming, Chat, Whiteboard) along with a custom backend for token generation. Each of these components represents a significant development task in its own right. If a single, comprehensive prompt were used, the AI might become overwhelmed, potentially leading to incomplete features or misinterpretations of the user's intent. By breaking down the task into smaller, verifiable phases, the scope of any potential issues is narrowed, making debugging and re-prompting significantly more efficient. This approach transforms the human architect's role from direct coding to meticulous task decomposition, iterative validation, and strategic prompt engineering for successful outcomes.
+The following table outlines a recommended phased approach for prompting Bolt.new to build the Agora.io classroom application:
+Table 1.1: Phased Bolt.new Prompting Strategy
+Phase
+	Description
+	Key Bolt.new Action
+	Expected Output
+	Phase 1: Core Application Setup
+	Establish the foundational web application structure and backend server.
+	"Create a new React.js project with a basic Node.js Express server. Configure the server for API endpoints and CORS."
+	Basic React app running; Express server accessible on a defined port.
+	Phase 2: Backend Token Server
+	Implement the Node.js backend for secure dynamic Agora token generation.
+	"Implement the Agora token generation logic for RTC, Chat, and Whiteboard services in the Node.js Express server. Ensure secure handling of credentials via environment variables."
+	Backend endpoints returning valid RTC, Chat, and Whiteboard tokens.
+	Phase 3: Live Streaming (RTC) Integration
+	Integrate Agora RTC Web SDK for interactive live video and audio.
+	"Integrate Agora RTC Web SDK NG into the React frontend. Implement client initialization, local track management, remote stream subscription, and channel joining using tokens from the backend."
+	Local video/audio displayed; remote participants' streams visible/audible.
+	Phase 4: Real-time Chat Integration
+	Integrate Agora Chat SDK (or UI Kit) for real-time messaging.
+	"Integrate Agora Chat SDK (or agora-chat-uikit) into the React frontend. Implement chat client initialization, user login, message sending, and message reception using tokens from the backend."
+	Functional chat interface for sending/receiving messages.
+	Phase 5: Interactive Whiteboard Integration
+	Integrate Agora Fastboard SDK for collaborative whiteboard functionality.
+	"Integrate Agora Fastboard SDK into the React frontend. Implement whiteboard initialization, room joining using tokens from the backend, and display of basic drawing tools."
+	Interactive whiteboard displayed, allowing basic drawing.
+	Phase 6: Flexible Classroom Feature Integration & Refinement
+	Combine all features into a cohesive classroom experience and apply production best practices.
+	"Integrate RTC, Chat, and Whiteboard components into a unified classroom UI. Implement teacher/student role-based controls. Add robust error handling, network resilience, and token renewal logic."
+	Fully functional interactive classroom with role-based features and robust operation.
+	
+
+
+
+
+
+This table provides a clear, actionable roadmap for the entire project. It visually represents the iterative approach, making the complex prompting strategy clear and actionable for the user. By explicitly defining phases and expected outputs, it helps the AI understand the sequence and scope of each request, reducing ambiguity. Each phase also serves as a verification checkpoint, allowing the user to confirm Bolt.new's output before proceeding, aligning with the platform's advice to "Check if the change works".[1]
+
+Section 2: Backend Development: Agora Dynamic Key Generation (Node.js)
+The Node.js backend for dynamic key generation is a cornerstone of any production-ready Agora.io application. Its secure and efficient operation is paramount for user authentication and access control.
+   * 2.1 Importance of Token Authentication in Production
+In a production environment, Agora explicitly mandates the use of dynamic keys, commonly referred to as tokens, to authenticate users joining any channel. This mechanism is critical for ensuring communication security and controlling access to Agora services.10 While temporary tokens are available for development and testing purposes, they are not suitable for production and typically expire within 24 hours.10 A robust production environment necessitates deploying a dedicated server for token generation, which is responsible for returning authentication tokens valid for specific channels or a set of wildcard channels.11 This approach prevents the exposure of sensitive credentials, such as the AppCertificate, on the client side, a fundamental security principle.
+The role of token authentication extends beyond simple access control. The RtcTokenBuilder2 supports generating tokens with specific privileges, including "Joining an RTC channel," "Publishing audio stream," "Publishing video stream," and "Publishing data stream".12 This capability allows for granular control over user permissions within a channel. Furthermore, the Agora SDK triggers onTokenPrivilegeWillExpire and onRequestToken callbacks, indicating that the application needs to manage the lifecycle of these tokens by renewing them before they expire.13 For an interactive classroom application, this granular control is vital: teachers might possess full publishing privileges, while students could initially have only subscribing privileges, with the ability to dynamically "raise hand" to gain temporary publishing rights. This requires the token server to generate tokens with varying privilege sets based on user roles and in-session actions, enabling a more dynamic and secure classroom environment.
+   * 2.2 Setting up the Node.js Token Server
+The agora-token npm package is the official and recommended library for generating dynamic keys for Agora RTC and RTM services in Node.js.9 This package includes core builders like RtcTokenBuilder.js and RtmTokenBuilder.js within its /src/ directory, along with sample implementations in /sample/.9 For production deployment, particularly in environments with strict file bundling requirements (such as Cloudflare Workers or Google Apps Script), it is highly recommended to bundle the token generator into a single JavaScript file using Webpack.8 This practice simplifies deployment, optimizes the server's footprint, and minimizes the risk of script logic breakage.8 Node.js version 18.19.0 or higher is a prerequisite for this setup.8
+The core logic for token generation varies by Agora service:
+      * RTC Token Generation: The agora-token package's RtcTokenBuilder (or RtcTokenBuilder2 if leveraging the Agora Tools repository directly for advanced features) is utilized. Key parameters include appID, appCertificate, channelName, a unique uid (integer) or userAccount (string), the user's role (e.g., RtcRole.PUBLISHER for hosts/broadcasters, RtcRole.SUBSCRIBER for audience members), tokenExpirationInSeconds, and privilegeExpirationInSeconds.12
+      * RTM (Chat) Token Generation: The agora-token package provides RtmTokenBuilder and, more specifically, ChatTokenBuilder for Agora Chat tokens.9 Essential parameters include appID, appCertificate, userUuid (for buildUserToken), and expirationInSeconds.15
+      * Whiteboard Token Generation: This process is distinct from RTC/RTM. The Agora Interactive Whiteboard (Fastboard SDK) requires its own sdkToken (obtained from the Netless Console and registered with Agora Cloud Service 17) and a roomToken. The roomToken is generated by making direct RESTful API calls to Agora's whiteboard service: first, a room is created by sending a POST request to https://api.netless.link/v5/rooms (which returns a roomUUID), and subsequently, a roomToken is generated by sending a POST request to https://api.netless.link/v5/tokens/rooms/<Room UUID>.18 This means the Node.js server will need to implement HTTP requests to Agora's REST API endpoints for whiteboard tokens, rather than using the agora-token npm package directly.
+The difference in token generation for the whiteboard service is a crucial architectural detail. While the agora-token npm package provides builders for RTC and RTM tokens, the research indicates that whiteboard tokens are generated through a separate process involving direct REST API calls to Agora's whiteboard service. This implies that the Node.js backend cannot simply rely on a single token builder library for all Agora services. Instead, it must implement two distinct token generation mechanisms: one utilizing the agora-token npm package for RTC and RTM, and another employing HTTP clients (such as axios or fetch) to interact with Agora's Whiteboard REST APIs. This adds complexity to the backend, requiring additional dependencies and separate logic flows, but is essential for a complete and securely integrated solution.The following table summarizes the essential parameters and roles for generating various Agora tokens:Table 2.2: Essential Agora Token Parameters and Roles
+
+
+Agora Service
+	Token Type
+	Key Parameters
+	Node.js Method/API
+	Notes
+	Interactive Live Streaming (RTC)
+	RTC Token
+	appID, appCertificate, channelName, uid (int) / userAccount (string), role, tokenExpirationInSecond, privilegeExpirationInSecond
+	RtcTokenBuilder.buildTokenWithUid or buildTokenWithAccount
+	uid can be 0 for auto-assignment (not recommended for production). role defines permissions (Publisher/Subscriber). privilegeExpirationInSecond allows granular control over join/publish rights.13
+	Real-time Chat (RTM/Chat)
+	RTM Token
+	appID, appCertificate, userAccount (string), tokenExpirationInSecond
+	RtmTokenBuilder.buildToken
+	Primarily for RTM signaling, general messaging.16
+	Real-time Chat (RTM/Chat)
+	Chat User Token
+	appID, appCertificate, userUuid (string), expirationInSeconds
+	ChatTokenBuilder.buildUserToken
+	Specific for Agora Chat user authentication.15
+	Interactive Whiteboard
+	Whiteboard Room Creation
+	NETLESS_SDK_TOKEN, region, isRecord (boolean)
+	POST https://api.netless.link/v5/rooms
+	Requires a separate Netless SDK Token from Agora Console.17 Creates a room and returns a room UUID.18
+	Interactive Whiteboard
+	Whiteboard Room Token
+	NETLESS_SDK_TOKEN, roomUUID, region, lifespan, role
+	POST https://api.netless.link/v5/tokens/rooms/<Room UUID>
+	Generated for a specific roomUUID. region must match room creation region. lifespan in milliseconds. role defines permissions within the whiteboard (host/guest).18
+	
+
+
+
+
+
+This table consolidates the varying parameters and methods for generating different types of Agora tokens, which is a common point of confusion for developers. By explicitly listing each parameter and its purpose, along with the relevant Agora SDK/Service and role, it significantly reduces the chance of misinterpretation by Bolt.new, ensuring the generation of correct token logic.
+
+      * 2.3 Production Deployment Considerations
+For production environments, several critical considerations extend beyond the core token generation logic to ensure security, reliability, and maintainability.
+Webpack Bundling: As highlighted, Webpack is the recommended tool to bundle the Node.js token generator into a single, deployable JavaScript file.8 This process typically involves configuring a webpack.config.js file to specify the entry point, target environment (Node.js), and output bundle, followed by executing a build command (e.g., npm run build). This step is essential for optimizing the deployment footprint and ensuring all dependencies are self-contained within the final script, which is particularly beneficial for serverless functions or edge environments.
+Environment Variables: For robust production deployments, sensitive information such as APP_ID, APP_CERTIFICATE, and the NETLESS_SDK_TOKEN must never be hardcoded directly into the application's source code.12 Instead, they should be loaded securely from environment variables. For local development, a .env file can be used in conjunction with a library like dotenv to manage these variables.21 This is a fundamental security practice, as hardcoding credentials poses a significant risk of exposure in version control systems or during deployment. Using environment variables allows for flexible configuration across different environments (development, staging, production) without requiring code modifications.
+HTTPS Enforcement: All communication channels, including API calls to the token server and interactions with Agora's REST APIs, must be secured using HTTPS in a production environment. This is crucial for encrypting data in transit, preventing eavesdropping, and ensuring data integrity.23
+Robust Error Handling and Logging: The backend should implement comprehensive error handling for all API interactions, gracefully managing responses and potential failures.23 Detailed logging should be enabled to monitor usage, diagnose issues, and provide audit trails. This allows for proactive identification and resolution of problems in a live environment.23
+Rate Limiting: Developers must be aware of Agora's API rate limits, such as the initial Queries Per Second (QPS) limit of 10 per App ID.25 Implementing appropriate throttling or backoff mechanisms on the token server is necessary to avoid exceeding these limits and causing service disruptions.23 This proactive measure ensures the stability and availability of the token generation service under varying load conditions.
+The emphasis on these considerations in the prompt ensures that Bolt.new produces a holistic solution, not just functional code. This deepens the understanding of "production-ready" beyond mere feature implementation to include operational excellence and security. The deployment of a production-ready token server involves establishing an "invisible" infrastructure that supports the core functionality. This includes setting up Webpack for efficient bundling, ensuring sensitive credentials are managed via environment variables, enforcing HTTPS for secure communication, implementing robust error handling and logging for operational visibility, and adhering to API rate limits for stability. These elements are not directly part of the agora-token library but are critical for deploying and operating the token server in a real-world, production environment. The prompt for Bolt.new must explicitly guide it to consider and generate the necessary configuration, deployment scripts, and architectural patterns that address these non-functional requirements.
+Code Snippet: Node.js Express Token Server Example
+This code provides a basic Express.js server structure demonstrating how to handle requests for different Agora tokens. It emphasizes the use of environment variables for sensitive credentials and includes logic for RTC, Chat, and Whiteboard token generation.
+
+
+JavaScript
+
+
+
+
+// tokenServer.js (for Node.js)
+const express = require('express');
+const dotenv = require('dotenv');
+const { RtcTokenBuilder, RtcRole, ChatTokenBuilder } = require('agora-token');
+const axios = require('axios'); // For Whiteboard REST API calls
+
+dotenv.config(); // Load environment variables from.env file
+
+const app = express();
+const PORT = process.env.PORT |
+| 8080;
+
+// Agora Credentials (from.env)
+const APP_ID = process.env.AGORA_APP_ID;
+const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
+const WHITEBOARD_SDK_TOKEN = process.env.AGORA_WHITEBOARD_SDK_TOKEN; // Netless SDK Token
+
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// CORS configuration for frontend access
+app.use((req, res, next) => {
+   res.header('Access-Control-Allow-Origin', '*'); // Adjust this for production to specific domains
+   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+   if (req.method === 'OPTIONS') {
+       return res.sendStatus(200);
+   }
+   next();
+});
+
+// Helper function for token expiration
+const generateExpiration = (expireTimeInSeconds = 3600) => {
+   const currentTimestamp = Math.floor(Date.now() / 1000);
+   return currentTimestamp + expireTimeInSeconds;
+};
+
+// 1. RTC Token Generation Endpoint
+app.get('/rtcToken', (req, res) => {
+   try {
+       const { channelName, uid, role = RtcRole.PUBLISHER, expireTime } = req.query;
+
+       if (!channelName ||!uid) {
+           return res.status(400).json({ error: 'channelName and uid are required.' });
+       }
+       if (!APP_ID ||!APP_CERTIFICATE) {
+           return res.status(500).json({ error: 'Agora App ID or App Certificate not configured.' });
+       }
+
+       const tokenExpirationInSeconds = parseInt(expireTime) |
+| 3600; // Default 1 hour
+       const privilegeExpirationInSeconds = tokenExpirationInSeconds; // Same as token expiration for simplicity
+
+       const rtcToken = RtcTokenBuilder.buildTokenWithUid(
+           APP_ID,
+           APP_CERTIFICATE,
+           channelName,
+           parseInt(uid), // UID can be an integer
+           role,
+           tokenExpirationInSeconds,
+           privilegeExpirationInSeconds
+       );
+
+       console.log(`Generated RTC Token for channel: ${channelName}, uid: ${uid}`);
+       res.status(200).json({ rtcToken });
+   } catch (error) {
+       console.error('Error generating RTC token:', error);
+       res.status(500).json({ error: 'Failed to generate RTC token.' });
+   }
+});
+
+// 2. Chat (RTM) Token Generation Endpoint
+app.get('/chatToken', (req, res) => {
+   try {
+       const { userUuid, expireTime } = req.query;
+
+       if (!userUuid) {
+           return res.status(400).json({ error: 'userUuid is required.' });
+       }
+       if (!APP_ID ||!APP_CERTIFICATE) {
+           return res.status(500).json({ error: 'Agora App ID or App Certificate not configured.' });
+       }
+
+       const tokenExpirationInSeconds = parseInt(expireTime) |
+| 3600; // Default 1 hour
+       const chatToken = ChatTokenBuilder.buildUserToken(
+           APP_ID,
+           APP_CERTIFICATE,
+           userUuid,
+           tokenExpirationInSeconds
+       );
+
+       console.log(`Generated Chat Token for user: ${userUuid}`);
+       res.status(200).json({ chatToken });
+   } catch (error) {
+       console.error('Error generating Chat token:', error);
+       res.status(500).json({ error: 'Failed to generate Chat token.' });
+   }
+});
+
+// 3. Whiteboard Token Generation Endpoint
+app.get('/whiteboardToken', async (req, res) => {
+   try {
+       let { roomUUID, expireTime } = req.query;
+
+       if (!WHITEBOARD_SDK_TOKEN) {
+           return res.status(500).json({ error: 'Agora Whiteboard SDK Token not configured.' });
+       }
+
+       const tokenExpirationInSeconds = parseInt(expireTime) |
+| 3600; // Default 1 hour
+       const expireTimestamp = generateExpiration(tokenExpirationInSeconds);
+
+       // If roomUUID is not provided, create a new room
+       if (!roomUUID) {
+           console.log('No roomUUID provided, creating a new whiteboard room...');
+           const createRoomResponse = await axios.post(
+               'https://api.netless.link/v5/rooms',
+               { isRecord: false }, // Set to true if you need cloud recording for whiteboard
+               {
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'token': WHITEBOARD_SDK_TOKEN, // Use Netless SDK Token here
+                       'region': 'us-sv' // Specify your Agora Whiteboard data center (e.g., 'us-sv', 'cn-hz', 'sg', 'in-mum', 'eu')
+                   }
+               }
+           );
+           roomUUID = createRoomResponse.data.uuid;
+           console.log(`New whiteboard room created with UUID: ${roomUUID}`);
+       }
+
+       // Generate room token for the whiteboard
+       const generateTokenResponse = await axios.post(
+           `https://api.netless.link/v5/tokens/rooms/${roomUUID}`,
+           {
+               lifespan: tokenExpirationInSeconds * 1000, // lifespan in milliseconds
+               role: 'host' // or 'guest'
+           },
+           {
+               headers: {
+                   'Content-Type': 'application/json',
+                   'token': WHITEBOARD_SDK_TOKEN, // Use Netless SDK Token here
+                   'region': 'us-sv' // Must match the room's region
+               }
+           }
+       );
+
+       const roomToken = generateTokenResponse.data;
+       console.log(`Generated Whiteboard Room Token for room: ${roomUUID}`);
+       res.status(200).json({ roomUUID, roomToken });
+   } catch (error) {
+       console.error('Error generating Whiteboard token:', error.response? error.response.data : error.message);
+       res.status(500).json({ error: 'Failed to generate Whiteboard token.' });
+   }
+});
+
+// Start the server
+app.listen(PORT, () => {
+   console.log(`Agora Token Server listening on port ${PORT}`);
+   console.log(`Ensure AGORA_APP_ID, AGORA_APP_CERTIFICATE, and AGORA_WHITEBOARD_SDK_TOKEN are set in your.env file.`);
+   console.log(`Example: http://localhost:${PORT}/rtcToken?channelName=testChannel&uid=123`);
+   console.log(`Example: http://localhost:${PORT}/chatToken?userUuid=user123`);
+   console.log(`Example: http://localhost:${PORT}/whiteboardToken?roomUUID=your-existing-room-uuid`);
+});
+
+Instructions for Bolt.new regarding the token server:
+"Create a Node.js Express application. Implement the tokenServer.js code provided above. Ensure dotenv, agora-token, and axios are installed as dependencies in package.json. Provide instructions for setting up a .env file with AGORA_APP_ID, AGORA_APP_CERTIFICATE, and AGORA_WHITEBOARD_SDK_TOKEN. Configure the Express server to listen on port 8080 (or a configurable port). Add a start script in package.json to run node tokenServer.js. Crucially, remind the user that in production, this server should be deployed securely (e.g., on a cloud platform) and accessed via HTTPS."
+Section 3: Frontend Integration: Agora.io SDKs on Bolt.new
+The frontend of the interactive classroom application will integrate various Agora.io SDKs to deliver live streaming, chat, and whiteboard functionalities. A modular and production-ready approach is essential for a robust user experience.
+         * 3.1 General Web Integration Principles for Agora SDKs
+Agora Web SDKs offer flexibility in integration, either by including a Content Delivery Network (CDN) link directly in the HTML or by installing them as NPM packages and importing them into the JavaScript/TypeScript code.5 For modern web frameworks like React, which is implied for a complex web application, NPM installation is the preferred and more robust method.5 NPM provides superior version control, streamlined dependency management, and seamless integration into modern JavaScript build pipelines, all of which contribute to the robustness, maintainability, and scalability of a production application.
+A unique App ID is a fundamental requirement for all Agora services and must be obtained from the Agora Console.3 This App ID identifies the project within the Agora ecosystem. The App Certificate, on the other hand, is a secret key used exclusively on the server-side for secure token generation, as discussed in Section 2.6
+The user's goal is to build an "Agora.io powered app which provides Interactive Live Streaming, Flexible Classroom, Chat, Interactive Whiteboard." Agora offers "Flexible Classroom" as a distinct product designed for online education, which integrates Interactive Whiteboard, Instant Messaging (Chat), and real-time interactivity (RTC).30 This suggests a higher-level abstraction than simply integrating disparate SDKs. While direct integration of individual RTC, Chat, and Whiteboard SDKs offers maximum flexibility, leveraging Agora's Flexible Classroom SDK or UI Kits (such as agora-chat-uikit or Fastboard SDK) could significantly speed up development for common classroom scenarios. This is particularly relevant when using a tool like Bolt.new for boilerplate generation. Therefore, the prompt should guide Bolt.new to consider the "Flexible Classroom" as the overarching framework, ensuring that UI components are designed for cohesive interaction and leveraging UI Kits where they exist to accelerate development, while retaining the option to use raw SDKs for deeper customization as needed for production readiness.
+The following table summarizes the primary Agora SDKs required for the application, their recommended web integration methods, and their core functionalities:
+Table 3.1: Agora SDKs for Web: Integration Methods and Key Modules
+
+
+Feature
+	Primary Agora SDK
+	Recommended NPM Package
+	Key Client-side Classes/Modules
+	Integration Notes
+	Interactive Live Streaming
+	Agora RTC Web SDK NG
+	agora-rtc-sdk-ng 5
+	AgoraRTCClient, LocalVideoTrack, LocalAudioTrack, RemoteVideoTrack, RemoteAudioTrack
+	Handles real-time video and audio streams, screen sharing. Requires token for joining channels.26
+	Real-time Chat
+	Agora Chat SDK
+	agora-chat
+	ChatClient, ChatMessage
+	For messaging, presence, user management. agora-chat-uikit available for pre-built UI components.33
+	Interactive Whiteboard
+	Agora Interactive Whiteboard SDK / Fastboard SDK
+	@netless/fastboard
+	FastboardApp, FastRoom
+	For collaborative drawing, document display, multimedia playback. Fastboard simplifies API access and provides default UI.18
+	
+
+
+
+
+
+This table provides a quick reference for the developer on how each core feature maps to Agora's SDKs and their common integration points. It is crucial for a multi-SDK project as it ensures Bolt.new uses the correct dependencies and entry points, promoting a consistent integration approach across the different features and streamlining the initial setup phase.
+
+            * 3.2 Interactive Live Streaming (RTC) Integration
+The integration of Agora's Interactive Live Streaming (RTC) capabilities forms the backbone of the classroom's real-time video and audio communication.
+Client Initialization: The core of RTC integration involves creating an AgoraRTCClient instance. For live streaming, the mode should be set to 'live' (or 'rtc' for general video calls), and a codec (e.g., 'h264' or 'vp8') should be specified.24 The client must then be initialized with the APP_ID obtained from the Agora Console.24
+Local Stream Management: Local audio and video tracks are obtained using AgoraRTC.createMicrophoneAndCameraTracks().27 This function simplifies the process of accessing the user's microphone and camera. These local tracks are then published to the Agora channel using client.publish(localTracks) to make them visible and audible to other participants.26 The local video stream should be rendered in a designated HTML element, typically a <video> tag within a container like <div id="local-stream-container">.24
+Remote Stream Management: The application must listen for user-published events on the AgoraRTCClient to detect when a remote user starts publishing their audio or video stream.24 Upon detecting a new published stream, the application subscribes to it using client.subscribe(user, mediaType).24 Remote video streams are then played within their respective HTML elements (e.g., <div id="remote-stream-container">).26 To maintain a clean UI, the application should also handle user-unpublished or peer-leave events to remove remote streams when users disconnect.35
+Joining a Channel: The client.join(token, channelName, uid) method is used to connect to an Agora channel.24 The token parameter is crucial for secure production environments, as it authenticates the user and their privileges, as generated by the Node.js backend.
+Screen Sharing: For screen sharing, it is a recommended practice to create a separate AgoraRTCClient instance and assign a distinct User ID (UID) to it. This can be achieved by adding a unique prefix (e.g., 999) to the base user ID. This differentiation allows the subscriber side to distinguish the screen share stream from the camera stream.39
+Error Handling: Implementing robust try-catch blocks around SDK calls, especially when creating tracks (createMicrophoneAndCameraTracks), is essential. It is also a proactive measure to check for available audio/video input devices using AgoraRTC.getDevices() before attempting to create tracks, as device IDs can dynamically change between sessions, potentially causing media stream acquisition to fail.40 Providing clear and informative UI feedback to users if microphone access is denied or devices are unavailable significantly enhances the user experience.40
+The proactive device management for enhanced user experience is a subtle yet significant detail for production robustness. Device IDs are dynamically generated and can change between sessions or device state changes, leading to media stream acquisition failures if stale IDs are used.40 By calling AgoraRTC.getDevices() immediately before creating audio tracks, the application ensures it uses valid, current device IDs, preventing common errors. This goes beyond basic error handling by proactively preventing issues, directly impacting the user's perception of application reliability. The prompt needs to instruct Bolt.new to implement this proactive device management logic, including enumerating devices, allowing user selection, and re-checking device availability.
+Code Snippet: Basic RTC Client Setup and Join Channel
+               * Section to Include In: Section 3.2
+               * Purpose: Illustrate the fundamental steps for initializing the RTC client, handling local and remote streams, and joining a channel securely with a token.
+
+
+JavaScript
+
+
+
+
+// rtcIntegration.js (Frontend)
+import AgoraRTC from 'agora-rtc-sdk-ng';
+
+// Replace with your Agora App ID and backend token server URL
+const APP_ID = 'YOUR_AGORA_APP_ID'; // Placeholder, should be loaded from env or config
+const TOKEN_SERVER_URL = 'http://localhost:8080'; // Replace with your deployed token server URL
+
+let rtcClient = null;
+let localTracks = {
+   audioTrack: null,
+   videoTrack: null
+};
+let remoteUsers = {}; // To store remote user streams
+
+// Function to fetch RTC token from your backend
+async function fetchRtcToken(channelName, uid) {
+   try {
+       const response = await fetch(`${TOKEN_SERVER_URL}/rtcToken?channelName=${channelName}&uid=${uid}`);
+       if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+       }
+       const data = await response.json();
+       return data.rtcToken;
+   } catch (error) {
+       console.error('Failed to fetch RTC token:', error);
+       alert('Failed to get RTC token. Please check your token server.');
+       return null;
+   }
+}
+
+// Initialize RTC client
+async function initRtcClient() {
+   rtcClient = AgoraRTC.createClient({ mode: 'rtc', codec: 'h264' }); // 'rtc' for video call, 'live' for live streaming
+   
+   // Listen for remote users publishing their streams
+   rtcClient.on('user-published', async (user, mediaType) => {
+       await rtcClient.subscribe(user, mediaType);
+       if (mediaType === 'video') {
+           const remoteVideoTrack = user.videoTrack;
+           const playerContainer = document.createElement('div');
+           playerContainer.id = `remote-player-${user.uid}`;
+           playerContainer.style.width = '320px';
+           playerContainer.style.height = '240px';
+           document.getElementById('remote-stream-container').append(playerContainer);
+           remoteVideoTrack.play(playerContainer);
+       }
+       if (mediaType === 'audio') {
+           user.audioTrack.play();
+       }
+       remoteUsers[user.uid] = user;
+   });
+
+   // Listen for remote users unpublishing or leaving
+   rtcClient.on('user-unpublished', (user) => {
+       const playerContainer = document.getElementById(`remote-player-${user.uid}`);
+       if (playerContainer) {
+           playerContainer.remove();
+       }
+       delete remoteUsers[user.uid];
+   });
+
+   rtcClient.on('user-left', (user) => {
+       const playerContainer = document.getElementById(`remote-player-${user.uid}`);
+       if (playerContainer) {
+           playerContainer.remove();
+       }
+       delete remoteUsers[user.uid];
+   });
+
+   console.log('Agora RTC Client initialized.');
+}
+
+// Join RTC channel
+async function joinRtcChannel(channelName, uid) {
+   if (!rtcClient) {
+       await initRtcClient();
+   }
+
+   try {
+       // Fetch token from your server
+       const token = await fetchRtcToken(channelName, uid);
+       if (!token) {
+           return;
+       }
+
+       // Create local audio and video tracks
+       // Ensure devices are available before creating tracks [40]
+       const devices = await AgoraRTC.getDevices();
+       const audioInputDevices = devices.filter(device => device.kind === 'audioinput');
+       const videoInputDevices = devices.filter(device => device.kind === 'videoinput');
+
+       if (audioInputDevices.length === 0 |
+| videoInputDevices.length === 0) {
+           alert('No audio or video input devices found. Please check your camera and microphone.');
+           return;
+       }
+
+       = await AgoraRTC.createMicrophoneAndCameraTracks({
+           audioConfig: 'music_standard',
+           videoConfig: {
+               encoderConfig: '480p_1', // Example video profile
+               optimizationMode: 'detail'
+           }
+       });
+
+       // Join the channel
+       await rtcClient.join(APP_ID, channelName, token, uid);
+       console.log(`Joined RTC channel: ${channelName} with UID: ${uid}`);
+
+       // Play local video
+       const localPlayerContainer = document.getElementById('local-stream-container');
+       if (localPlayerContainer) {
+           localTracks.videoTrack.play(localPlayerContainer);
+       }
+
+       // Publish local tracks
+       await rtcClient.publish(Object.values(localTracks));
+       console.log('Local tracks published.');
+
+   } catch (error) {
+       console.error('Failed to join RTC channel:', error);
+       alert('Failed to join RTC channel. Please check console for details.');
+   }
+}
+
+// Leave RTC channel
+async function leaveRtcChannel() {
+   if (localTracks.audioTrack) {
+       localTracks.audioTrack.close();
+       localTracks.audioTrack = null;
+   }
+   if (localTracks.videoTrack) {
+       localTracks.videoTrack.close();
+       localTracks.videoTrack = null;
+   }
+   Object.values(remoteUsers).forEach(user => {
+       const playerContainer = document.getElementById(`remote-player-${user.uid}`);
+       if (playerContainer) {
+           playerContainer.remove();
+       }
+   });
+   remoteUsers = {};
+   if (rtcClient) {
+       await rtcClient.leave();
+       console.log('Left RTC channel.');
+   }
+}
+
+// Export functions for use in the main app
+export { initRtcClient, joinRtcChannel, leaveRtcChannel, fetchRtcToken };
+
+               * 3.3 Real-time Chat Integration
+Integrating real-time chat functionality is essential for enabling text-based communication between teachers and students within the classroom environment.
+Chat Client Initialization: The Agora Chat SDK is initialized using ChatClient.getInstance().initializeSDK(options), where the options object must include the appKey obtained from the Agora Console.33 For accelerated development and a pre-built UI, the agora-chat-uikit library offers a higher-level UIKitProvider component that internally manages SDK initialization and context.33 This can serve as an efficient starting point for Bolt.new to generate a functional chat interface.
+Login/Logout: Users must explicitly log in to the chat server using their userId and a token.41 This chat-specific token should be securely fetched from the Node.js backend, as detailed in Section 2.
+Sending Messages: Messages are constructed using ChatMessage factory methods, such as ChatMessage.createTextSendMessage(content, conversationId) for text messages.43 The SDK supports various message types, including voice, video, file, command, and custom messages.43 The conversationId specifies the recipient (a peer user ID for single chat, a group ID for group chat, or a chatroom ID for chat rooms), and chatType defines the conversation type.43 Messages are then sent via ChatClient.getInstance().chatManager().sendMessage(message).43 The Agora Chat SDK also supports rich media messages, emojis, and push notifications.45
+Receiving Messages: The application must register listeners (delegates) to handle incoming messages, typically through the messagesDidReceive callback.41 This ensures that the UI updates in real-time as new messages arrive.
+Channel and User Management: The Chat SDK provides robust features for managing channel metadata, controlling push notification behavior, storing message history, and enabling role-based user management within chat contexts.45
+Content Moderation: To safeguard the community and ensure a positive learning environment, Agora Chat offers built-in content moderation features that help protect users from unwanted profanity, offensive language, and inappropriate images or text.45
+Code Snippet: Basic Chat Client Setup and Message Handling
+                  * Section to Include In: Section 3.3
+                  * Purpose: Illustrate initializing the Chat SDK, logging in, sending a text message, and listening for incoming messages.
+
+
+JavaScript
+
+
+
+
+// chatIntegration.js (Frontend)
+import { ChatClient } from 'agora-chat'; // Or import { UIKitProvider, Chat, ConversationList, useClient, rootStore } from 'agora-chat-uikit';
+
+// Replace with your Agora App Key and backend token server URL
+const APP_KEY = 'YOUR_AGORA_APP_KEY'; // From Agora Console
+const TOKEN_SERVER_URL = 'http://localhost:8080'; // Replace with your deployed token server URL
+
+let chatClient = null;
+
+// Function to fetch Chat token from your backend
+async function fetchChatToken(userUuid) {
+   try {
+       const response = await fetch(`${TOKEN_SERVER_URL}/chatToken?userUuid=${userUuid}`);
+       if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+       }
+       const data = await response.json();
+       return data.chatToken;
+   } catch (error) {
+       console.error('Failed to fetch Chat token:', error);
+       alert('Failed to get Chat token. Please check your token server.');
+       return null;
+   }
+}
+
+// Initialize Chat SDK
+async function initChatClient() {
+   chatClient = new ChatClient({ appKey: APP_KEY });
+
+   // Register event listeners
+   chatClient.addConnectionListener({
+       onConnected: () => console.log('Chat client connected.'),
+       onDisconnected: () => console.log('Chat client disconnected.'),
+       onLoggedIn: () => console.log('Chat client logged in.'),
+       onLoggedOut: () => console.log('Chat client logged out.'),
+       onTokenWillExpire: () => {
+           console.warn('Chat token will expire. Renewing...');
+           // Implement token renewal logic here, e.g., fetch new token and call chatClient.renewToken()
+       },
+       onTokenExpired: () => {
+           console.error('Chat token expired. Re-login required.');
+           // Prompt user to re-login or automatically re-authenticate
+       }
+   });
+
+   chatClient.on('message', (msg) => {
+       // Handle received messages
+       console.log('Received message:', msg);
+       // Display message in UI
+       const messagesDiv = document.getElementById('chat-messages');
+       if (messagesDiv) {
+           const p = document.createElement('p');
+           p.textContent = `${msg.from}: ${msg.msg}`;
+           messagesDiv.appendChild(p);
+           messagesDiv.scrollTop = messagesDiv.scrollHeight;
+       }
+   });
+
+   console.log('Agora Chat Client initialized.');
+}
+
+// Login to Chat
+async function loginChat(userUuid) {
+   if (!chatClient) {
+       await initChatClient();
+   }
+   try {
+       const token = await fetchChatToken(userUuid);
+       if (!token) {
+           return;
+       }
+       await chatClient.open({ user: userUuid, appKey: APP_KEY, token: token });
+       console.log(`Logged in to Chat as ${userUuid}`);
+   } catch (error) {
+       console.error('Failed to login to Chat:', error);
+       alert('Failed to login to Chat. Check console for details.');
+   }
+}
+
+// Send a text message
+async function sendChatMessage(to, messageContent, chatType = 'singleChat') {
+   if (!chatClient ||!chatClient.isLoggedIn) {
+       console.error('Chat client not logged in.');
+       alert('Please login to chat first.');
+       return;
+   }
+   try {
+       const message = ChatClient.getInstance().create({
+           type: 'txt',
+           to: to,
+           msg: messageContent,
+           chatType: chatType // 'singleChat', 'groupChat', 'chatRoom'
+       });
+       await chatClient.send(message);
+       console.log('Message sent:', message);
+       // Display sent message in UI
+       const messagesDiv = document.getElementById('chat-messages');
+       if (messagesDiv) {
+           const p = document.createElement('p');
+           p.textContent = `You: ${messageContent}`;
+           messagesDiv.appendChild(p);
+           messagesDiv.scrollTop = messagesDiv.scrollHeight;
+       }
+   } catch (error) {
+       console.error('Failed to send message:', error);
+       alert('Failed to send message. Check console for details.');
+   }
+}
+
+// Export functions
+export { initChatClient, loginChat, sendChatMessage, fetchChatToken };
+
+                  * 3.4 Interactive Whiteboard Integration
+The Interactive Whiteboard is a core component for collaborative learning, allowing teachers and students to interact visually in real-time.
+Fastboard SDK Initialization: The Fastboard SDK is Agora's latest generation Whiteboard SDK, designed to simplify integration and provide a default UI.18 It acts as a wrapper around the core Interactive Whiteboard SDK, reducing the complexity of API access. Initialization requires the appIdentifier (the App ID of your Agora Whiteboard project) and the region (the data center, e.g., us-sv).18 Crucially, it also requires a roomUUID and a roomToken, which must be obtained from your app server (the Node.js backend) via Agora's RESTful APIs, as detailed in Section 2.18
+Room Joining: Once initialized, a FastRoom instance is created using fastboard.createFastRoom(roomOptions) and then joined with fastRoom.join().18 This establishes the connection to the specific whiteboard session.
+Basic Drawing Tools: The Fastboard SDK provides a comprehensive set of default collaborative tools, including various brushes, erasers, undo/redo functionality, text formatting, and a laser pointer, significantly enhancing the interactive experience.32 These tools are typically part of the default UI provided by the Fastboard SDK.
+Document Management: The whiteboard supports inserting and displaying documents (e.g., PPT, Word, PDF) after they have been converted via Agora's file conversion service.46 This capability allows for on-file annotation, enabling teachers to present materials and annotate them collaboratively with students.
+Screen Sharing & Whiteboard: While screen sharing is typically handled by the RTC SDK, if a user shares their screen and it is intended to be displayed within the whiteboard context, Agora's Whiteboard SDK can differentiate between camera and screen share streams. This requires using separate RTC client instances and distinct UIDs (e.g., with a unique prefix) for each stream.39
+Code Snippet: Basic Whiteboard Setup and Interaction
+                     * Section to Include In: Section 3.4
+                     * Purpose: Illustrate the initialization of the Fastboard SDK, joining a whiteboard room using tokens from the backend, and basic display of the whiteboard.
+
+
+JavaScript
+
+
+
+
+// whiteboardIntegration.js (Frontend)
+import { createFastboard } from '@netless/fastboard'; // Assuming Fastboard SDK is installed via npm
+// Note: Fastboard SDK might require specific React versions [52]
+// Ensure your project's React version is compatible or use vanilla JS approach if preferred.
+
+// Replace with your Agora Whiteboard App Identifier and backend token server URL
+const WHITEBOARD_APP_IDENTIFIER = 'YOUR_AGORA_WHITEBOARD_APP_IDENTIFIER'; // From Agora Console
+const TOKEN_SERVER_URL = 'http://localhost:8080'; // Replace with your deployed token server URL
+const WHITEBOARD_REGION = 'us-sv'; // Must match the region used when creating the room [18, 46]
+
+let fastboardApp = null;
+let fastRoom = null;
+
+// Function to fetch Whiteboard Room Token from your backend
+async function fetchWhiteboardToken(roomUUID = '') { // Pass empty string to create new room if needed
+   try {
+       const response = await fetch(`${TOKEN_SERVER_URL}/whiteboardToken?roomUUID=${roomUUID}`);
+       if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+       }
+       const data = await response.json();
+       return { roomUUID: data.roomUUID, roomToken: data.roomToken };
+   } catch (error) {
+       console.error('Failed to fetch Whiteboard token:', error);
+       alert('Failed to get Whiteboard token. Please check your token server.');
+       return null;
+   }
+}
+
+// Initialize and join Whiteboard
+async function initWhiteboard(userId, customRoomUUID = '') {
+   try {
+       // Fetch room UUID and token from your server
+       const { roomUUID, roomToken } = await fetchWhiteboardToken(customRoomUUID);
+       if (!roomUUID ||!roomToken) {
+           return;
+       }
+
+       // Configuration for Fastboard
+       const fastboardConfig = {
+           sdkConfig: {
+               appIdentifier: WHITEBOARD_APP_IDENTIFIER,
+               region: WHITEBOARD_REGION,
+           },
+           roomConfig: {
+               uuid: roomUUID,
+               roomToken: roomToken,
+               uid: userId, // User ID for the whiteboard session
+               // For production, consider 'host' or 'guest' role based on user type
+               // See [13] for token role details (though this is for RTC, role concept applies)
+               // For whiteboard, 'host' allows drawing, 'guest' is view-only by default
+           },
+       };
+
+       // Create Fastboard instance
+       fastboardApp = await createFastboard(fastboardConfig);
+
+       // Mount the whiteboard to a DOM element
+       const whiteboardContainer = document.getElementById('whiteboard-container');
+       if (whiteboardContainer) {
+           fastboardApp.mount(whiteboardContainer);
+           console.log('Whiteboard mounted successfully.');
+           
+           // Get the FastRoom instance
+           fastRoom = fastboardApp.room;
+           console.log('FastRoom instance:', fastRoom);
+
+           // You can now interact with fastRoom for drawing, adding elements etc.
+           // Example: Add a text element (basic interaction demonstration)
+           // fastRoom.insertText('Hello from Agora Classroom!');
+       } else {
+           console.error('Whiteboard container not found.');
+       }
+
+   } catch (error) {
+       console.error('Failed to initialize or join whiteboard:', error);
+       alert('Failed to set up whiteboard. Check console for details.');
+   }
+}
+
+// Leave Whiteboard
+async function leaveWhiteboard() {
+   if (fastboardApp) {
+       await fastboardApp.destroy();
+       fastboardApp = null;
+       fastRoom = null;
+       console.log('Whiteboard destroyed.');
+   }
+}
+
+export { initWhiteboard, leaveWhiteboard, fetchWhiteboardToken };
+
+                     * 3.5 Flexible Classroom Components (Integration of RTC, Chat, Whiteboard)
+The "Flexible Classroom" solution from Agora is designed to provide a unified and engaging online learning environment. It seamlessly integrates real-time video/audio (RTC), messaging (Chat), and collaborative whiteboards, scaling effectively from one-to-one tutoring sessions to large lecture halls accommodating thousands of students.32
+The underlying Classroom SDK is structured into distinct architectural layers: the Edu UI layer (which is open-sourced for extensive customization), the Edu Context/UI Store layer, and the Edu Core layer (which encapsulates the closed-source business logic).31 This modular design facilitates development and customization. Furthermore, the solution provides "pluggable widgets" for common classroom features such as Interactive Whiteboard, Instant Messaging, Polling, Pop-up Quizzes, and Countdown Timers, allowing developers to easily integrate or customize these functionalities based on specific business requirements.31
+Key features offered by the Flexible Classroom solution include:
+                        * Real-time interactivity: Ultra-low latency video and signaling are delivered via Agora's global network, ensuring smooth, stutter-free communication regardless of local network conditions or device types.30
+                        * Complete whiteboard tools: A robust set of collaborative tools is provided, including multiple brushes, erasers, undo/redo functionality, selections, text formatting, a laser pointer, and document conversion capabilities.32
+                        * User management: Teachers are empowered with comprehensive class control features, allowing them to grant or revoke student access to presentation and collaboration tools, manage microphone and camera states (on/off), and even remove students from a class if necessary.32 This capability directly leverages the granular token privileges discussed in Section 2.1, where the backend token generation must support these roles.
+                        * Engagement tools: To foster student participation and monitor learning progress, built-in tools like live polling, pop-up quizzes, countdown timers, hand-raise features, and breakout rooms are available.32
+                        * Recording and playback: The platform supports recording live sessions, enabling measurement of student progress, saving content for later playback, or sharing collaborative discussions.32
+The strategy for integrating these components balances "low-code" efficiency with "full customization" flexibility. Agora promotes "Flexible Classroom" as a "low-code" solution, implying ease of integration with pre-built components.30 However, it also emphasizes "flexible, modular APIs" and "full customization" with its underlying SDKs.30 For Bolt.new, starting with a low-code approach (e.g., using UI Kits like agora-chat-uikit or Fastboard SDK with default UI) can be highly efficient for generating a functional prototype quickly. However, a "production mode ready" application often requires deep customization, which might necessitate dropping down to the raw SDKs. The most effective strategy for the Bolt.new prompt is to leverage the low-code UI Kits for speed and ease of initial setup, then explicitly instruct Bolt.new on how to customize or extend these components using the underlying SDKs when necessary. This provides a balance between rapid development and production-grade flexibility.Furthermore, the implementation of teacher/student role-based privileges and dynamic UI is a critical aspect. The Flexible Classroom features explicitly mention "User management: Maintain class control with teachers granting student access to the presentation and collaboration tools, controlling when mics and cameras are on or off, or even remove students from a class if needed".32 This directly connects to the granular privileges that can be embedded within RTC tokens, as discussed in Section 2.1. The backend token server must be capable of issuing tokens with appropriate privileges for teachers (e.g., publishing, moderating) and students (e.g., subscribing, requesting to publish). The frontend application, in turn, must consume these tokens and dynamically adjust its UI and available functionalities based on the user's assigned role and the privileges encoded in their current token. For instance, a student's "unmute" button might be disabled by default until the teacher grants them audio publishing privilege, which would trigger a token renewal from the backend. This dynamic interaction between backend authorization, token renewal, and frontend UI state management is a hallmark of a robust, real-time collaborative application.
+Section 4: Architectural Considerations and Production Readiness
+Achieving a "production-ready" Agora.io classroom application extends beyond mere functional integration to encompass critical architectural considerations, including security, robustness, scalability, and compliance.
+                        * 4.1 Security: Token Authentication Flow and HTTPS Enforcement
+The standard and recommended authentication flow for Agora services involves the client requesting a token from a dedicated app server. This app server, which securely holds the AppCertificate, generates the dynamic token using the Agora SDKs/APIs and then returns it to the client. The client subsequently uses this token to securely join Agora channels.10 This architecture is paramount for preventing the exposure of sensitive credentials on the client side, thereby significantly enhancing the application's security posture.
+All communication between the client and the app server (especially for token requests) and between the app server and Agora's REST APIs must be encrypted using HTTPS. This is critical for protecting sensitive data in transit, preventing eavesdropping, and ensuring data integrity.23
+The token authentication system also requires a continuous token refresh and lifecycle management strategy. Agora tokens are dynamic and have a limited validity period, typically a maximum of 24 hours.10 The Agora SDKs trigger onTokenPrivilegeWillExpire and onRequestToken callbacks when a token is about to expire or has already expired.13 This necessitates that the client-side application actively monitors these callbacks and proactively requests a new token from the backend before the current token expires. This proactive renewal prevents service interruptions, such as users being unexpectedly disconnected from a live session. The backend token server, in turn, must be designed to efficiently handle these token renewal requests. This continuous authentication and authorization process is a key aspect of building resilient and secure real-time applications.
+                        * 4.2 Robustness: Error Handling, Network Resilience, and Retry Mechanisms
+Building a robust real-time application requires meticulous attention to error handling, network resilience, and effective retry mechanisms.
+Client-side Error Handling: Comprehensive try-catch blocks should be implemented around all Agora SDK calls, particularly those involving device access, such as createMicrophoneAndCameraTracks. It is also a recommended practice to proactively check for available audio and video input devices using AgoraRTC.getDevices() before attempting to create tracks.40 This is crucial because device IDs can dynamically change between sessions or due to device state changes, which could otherwise lead to media stream acquisition failures.40 Providing clear and informative UI feedback to users in case of device access issues or other client-side errors significantly enhances the user experience and reduces frustration.
+Network Resilience: While Agora's global Software Defined Real-time Network (SD-RTN™) is engineered for ultra-low latency and mission-critical reliability with a 99.99% uptime 30, client-side network fluctuations are inevitable. The application should be designed to gracefully handle network disconnections and reconnections, ensuring a seamless experience for users.
+Retry Mechanisms: For RESTful API calls to the token server or Agora's services (e.g., for Cloud Recording or Whiteboard room management), implementing a backoff strategy for retries is highly recommended.25 This involves retrying failed requests after successively increasing intervals (e.g., 3, 6, and 9 seconds). This strategy helps mitigate transient network failures, temporary server issues, or hitting Queries Per Second (QPS) limits.23 For Cloud Recording APIs, using dual domain names (api.agora.io and api.sd-rtn.com) for retries can further enhance reliability.48
+Resource Management: Proper resource management is vital to prevent memory leaks and application crashes. Developers must ensure that unneeded Agora client and channel objects are explicitly released in a timely manner by calling methods like release().14 It is crucial to avoid accessing resources after they have been released and to avoid releasing a channel object within its own callback to prevent application hangs.14 This meticulous attention to resource lifecycles contributes significantly to the application's stability.
+The proactive device management for enhanced user experience is a critical aspect of robustness. The fact that device IDs are dynamically generated and can change between sessions or device state changes implies that relying on cached or outdated device IDs will lead to media stream acquisition failures.40 By calling AgoraRTC.getDevices() immediately before creating audio tracks, the application proactively verifies device availability, preventing errors rather than merely reacting to them. This approach directly improves the user experience by ensuring that camera and microphone access is seamless and reliable. The prompt for Bolt.new should therefore include instructions for implementing this proactive device enumeration and selection logic, not just basic track creation.
+                        * 4.3 Scalability: Understanding Agora Limits (PCW, QPS) and Optimization
+Scalability is a fundamental requirement for a production-ready classroom application, which must be capable of supporting varying audience sizes, from small groups to thousands of students.32
+Agora Limits: Developers must be aware of Agora's service limits, such as Peak Concurrent Worker (PCW) and Queries Per Second (QPS).25 The initial QPS limit is typically 10 per App ID, and the PCW limit is 200 for all regions and resolutions.25 If projected usage exceeds these limits, it is necessary to contact Agora support for an extension.25 Understanding these limits is crucial for designing the application to scale efficiently.
+Dual Video Streams: For large audiences with mixed network bandwidth conditions and diverse devices, leveraging Agora's optional dual-video streaming feature is highly beneficial.49 This allows the delivery of video at both high and low bitrates, optimizing the viewing experience for all participants regardless of their network capabilities.
+Cloud Proxy: For users operating behind restricted networks or firewalls, Agora's Cloud Proxy can ensure reliable connectivity to Agora services.50 This feature is essential for maximizing user reach and ensuring accessibility in diverse network environments.
+The emphasis on scalability as a design constraint, rather than an afterthought, is critical. Agora's global network, hyper-scalability, dual-video streams, and the existence of PCW/QPS limits are not merely features but architectural considerations that should influence the application's design from its inception.25 For a "Flexible Classroom" designed to scale from one-to-one to thousands of students, the choice of RTC video profiles, the decision to enable dual streams, and an understanding of QPS limits for token requests directly impact how the application will perform under heavy load. The prompt for Bolt.new should guide it to consider these scalability features during the initial design phase, ensuring the generated solution is inherently capable of handling anticipated user loads.
+                        * 4.4 Compliance: Highlighting HIPAA, GDPR, CCPA Adherence
+For an education application, particularly one handling student data, adherence to data privacy and security regulations is non-negotiable.
+Data Privacy: Agora services are designed to be compliant with major data privacy regulations, including HIPAA (Health Insurance Portability and Accountability Act), GDPR (General Data Protection Regulation), and CCPA (California Consumer Privacy Act).32 This compliance significantly reduces the regulatory burden on the application developer, as Agora handles a substantial portion of the compliance complexity related to real-time communication data.
+Security Standards: Beyond privacy regulations, Agora is certified to stringent information security and cloud privacy standards, including ISO/IEC 27001, 27017, 27018, and 27701, as well as SOC 2 security standards.45 These certifications provide assurance regarding the security practices and controls implemented by Agora.
+The inherent compliance of Agora's services with these regulations provides a significant advantage. This means that by utilizing Agora, the application inherently benefits from these compliance measures. However, it is important to note that the application developer remains responsible for their own application's data handling practices and ensuring user consent mechanisms are in place, particularly concerning any data processed or stored outside of Agora's direct services. This clear delineation of responsibility is crucial for achieving full regulatory adherence.
+Conclusion:
+This strategic blueprint provides a comprehensive and meticulously detailed plan for generating a production-ready Agora.io classroom web application using Bolt.new. The phased prompting strategy, combined with specific architectural considerations for the Node.js backend and frontend SDK integrations, is designed to maximize accuracy, clarity, and adherence to production standards.
+The report emphasizes the critical role of secure dynamic key generation, detailing the distinct requirements for RTC, Chat, and Whiteboard tokens, and providing a unified Node.js server example. It highlights the importance of production deployment considerations such as Webpack bundling, environment variable management, HTTPS enforcement, and robust error handling. On the frontend, it outlines the integration of Agora's RTC, Chat, and Fastboard SDKs, advocating for a balanced approach between low-code UI Kits and full SDK customization to achieve both development efficiency and desired functionality.
+Ultimately, the success of this project hinges on a methodical approach to prompting Bolt.new, treating each component integration as a distinct, verifiable step. By meticulously following this blueprint, the development team can leverage Bolt.new's capabilities to construct a robust, secure, and scalable interactive online classroom, ready for real-world deployment.
+Works cited
+                           1. Prompt effectively - Bolt, accessed June 2, 2025, https://support.bolt.new/best-practices/prompting-effectively
+                           2. AgoraIO/API-Examples-Web - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/API-Examples-Web
+                           3. AgoraIO/video-sdk-samples-reactjs - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/video-sdk-samples-reactjs
+                           4. package.json - AgoraIO/agora-rtc-web - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/agora-rtc-web/blob/main/package.json
+                           5. agora-rtc-sdk-ng - NPM, accessed June 2, 2025, https://www.npmjs.com/package/agora-rtc-sdk-ng
+                           6. README.md - Sample projects for Agora RTC Web SDK 4.x - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/API-Examples-Web/blob/main/README.md
+                           7. Build Websites by Describing Them: Your Guide to Bolt.new - Learn Prompting, accessed June 2, 2025, https://learnprompting.org/blog/guide-bolt
+                           8. How to Bundle the Agora Token generator Sample ( NodeJS ) into a Single JavaScript File, accessed June 2, 2025, https://agoraio.zendesk.com/hc/en-us/articles/34547993761684-How-to-Bundle-the-Agora-Token-generator-Sample-NodeJS-into-a-Single-JavaScript-File
+                           9. agora-token - NPM, accessed June 2, 2025, https://www.npmjs.com/package/agora-token
+                           10. Agora Web App Sample - CodeSandbox, accessed June 2, 2025, https://codesandbox.io/s/agora-web-app-sample-jyxcu
+                           11. Voice Calling Deploy a token server | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/voice-calling/token-authentication/deploy-token-server
+                           12. Video Calling Deploy a token server | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/video-calling/token-authentication/deploy-token-server
+                           13. Tools/DynamicKey/AgoraDynamicKey/go/src/rtctokenbuilder2/rtctokenbuilder.go at master · AgoraIO/Tools - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/Tools/blob/master/DynamicKey/AgoraDynamicKey/go/src/rtctokenbuilder2/rtctokenbuilder.go
+                           14. Signaling Integration best practice | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/1.x/signaling/develop/best-practice
+                           15. How to generate an app token for Agora Chat - Stack Overflow, accessed June 2, 2025, https://stackoverflow.com/questions/75666504/how-to-generate-an-app-token-for-agora-chat
+                           16. aljubaer/agora-token-server-nodejs - GitHub, accessed June 2, 2025, https://github.com/aljubaer/agora-token-server-nodejs
+                           17. plutoless/eEducation: e-education solutions(Agora Reference Design) - GitHub, accessed June 2, 2025, https://github.com/plutoless/eEducation
+                           18. Interactive Whiteboard Fastboard quickstart | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/interactive-whiteboard/get-started/get-started-uikit
+                           19. Tools/DynamicKey/AgoraDynamicKey/go/sample/RtmTokenBuilder/sample.go at master · AgoraIO/Tools - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/Tools/blob/master/DynamicKey/AgoraDynamicKey/go/sample/RtmTokenBuilder/sample.go
+                           20. Signaling Secure authentication with tokens | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/1.x/signaling/develop/authentication-workflow
+                           21. astro-backend/docs/TOKENS.md at main - GitHub, accessed June 2, 2025, https://github.com/AgoraIO-Community/astro-backend/blob/main/docs/TOKENS.md
+                           22. Using Agora's token service to authenticate users. - GitHub, accessed June 2, 2025, https://github.com/akshatvg/Agora-Token-Service
+                           23. Get Started with Agora RESTful APIs, accessed June 2, 2025, https://www.agora.io/en/blog/get-started-with-agora-restful-apis/
+                           24. Repository containing code for agora demo web application - GitHub, accessed June 2, 2025, https://github.com/technophilic/Agora-demo-web
+                           25. Cloud Recording Best practices in integrating web page recording | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/cloud-recording/best-practices/webpage-best-practices
+                           26. How To Use Agora Web SDK For Real-Time Video - WPWeb Infotech, accessed June 2, 2025, https://wpwebinfotech.com/blog/how-to-use-agora-web-sdk-for-real-time-video/
+                           27. Custom Video Elements with Javascript and Agora Web SDK, accessed June 2, 2025, https://www.agora.io/en/blog/custom-video-elements-with-javascript-and-agora-web-sdk/
+                           28. group-video-chat/Guide.md at master - GitHub, accessed June 2, 2025, https://github.com/AgoraIO-Community/group-video-chat/blob/master/Guide.md
+                           29. garimasingh128/agora-demo-app: Quickly create a basic video communication using the Agora sample app. - GitHub, accessed June 2, 2025, https://github.com/garimasingh128/agora-demo-app
+                           30. Agora Real-Time Voice and Video Engagement, accessed June 2, 2025, https://www.agora.io/en/
+                           31. Flexible Classroom Technical architecture | Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/flexible-classroom/overview/technical-architecture
+                           32. Flexible Classroom - Agora, accessed June 2, 2025, https://www.agora.io/en/tools/flexible-classroom/
+                           33. AgoraIO-Usecase/AgoraChat-UIKit-web - GitHub, accessed June 2, 2025, https://github.com/AgoraIO-Usecase/AgoraChat-UIKit-web
+                           34. netless-io/fastboard-android - GitHub, accessed June 2, 2025, https://github.com/netless-io/fastboard-android
+                           35. The basic JS code for group video chat using Agora.io - GitHub Gist, accessed June 2, 2025, https://gist.github.com/digitallysavvy/50174bf2e3b164eb0228f77851f87c5c
+                           36. zainbinfurqan/agora-live-steam - GitHub, accessed June 2, 2025, https://github.com/zainbinfurqan/agora-live-steam
+                           37. A broadcast client implementation for Agora.io's Web SDK - GitHub Gist, accessed June 2, 2025, https://gist.github.com/digitallysavvy/4ef54c791fe88c668cfe3420d7f6558f
+                           38. Agora-demo-web/README.md at master - GitHub, accessed June 2, 2025, https://github.com/AgoraIO-Community/Agora-demo-web/blob/master/README.md
+                           39. How to Differentiate Screen Sharing and Camera Video in Agora Whiteboard SDK, accessed June 2, 2025, https://agoraio.zendesk.com/hc/en-us/articles/37624047203220-How-to-Differentiate-Screen-Sharing-and-Camera-Video-in-Agora-Whiteboard-SDK
+                           40. Unexpected Error When Creating Microphone Audio Track Before Joining Channel in Agora Web SDK (React) - Zendesk, accessed June 2, 2025, https://agoraio.zendesk.com/hc/en-us/articles/37624144841876-Unexpected-Error-When-Creating-Microphone-Audio-Track-Before-Joining-Channel-in-Agora-Web-SDK-React
+                           41. Chat SDK quickstart - Agora Docs, accessed June 2, 2025, https://docs-staging.agora.io/en/agora-chat/get-started/get-started-sdk?platform=ios
+                           42. AgoraIO-Usecase/AgoraChat-web - GitHub, accessed June 2, 2025, https://github.com/AgoraIO-Usecase/AgoraChat-web
+                           43. Chat Send and receive messages - Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/agora-chat/client-api/messages/send-receive-messages
+                           44. Message | AgoraChat Documentation Beta, accessed June 2, 2025, https://hyphenateinc.github.io/web_message.html
+                           45. Chat SDK - Chat API Service for Developers - Agora, accessed June 2, 2025, https://www.agora.io/en/products/chat/
+                           46. Interactive Whiteboard Fastboard API | Agora Docs, accessed June 2, 2025, https://docs-preview.agora.io/en/interactive-whiteboard/reference/uikit-sdk?platform=web
+                           47. Interactive Whiteboard SDK for Web, Mobile & Desktop Apps - Agora, accessed June 2, 2025, https://www.agora.io/en/products/interactive-whiteboard/
+                           48. Best Practices in Integrating Cloud Recording - Agora Docs, accessed June 2, 2025, https://docs.agora.io/en/cloud-recording/best-practices/integration-best-practices
+                           49. Interactive Live Streaming SDK - Live Video Streaming API - Agora, accessed June 2, 2025, https://www.agora.io/en/products/interactive-live-streaming/
+                           50. Interactive Whiteboard Pricing - Agora, accessed June 2, 2025, https://www.agora.io/en/pricing/interactive-whiteboard/
+                           51. AgoraIO/signaling-sdk-samples-web - GitHub, accessed June 2, 2025, https://github.com/AgoraIO/signaling-sdk-samples-web
+                           52. Integrating @netless/window-manager with Whiteboard SDK: Common Issues and Solutions - Zendesk, accessed June 2, 2025, https://agoraio.zendesk.com/hc/en-us/articles/37624118390676-Integrating-netless-window-manager-with-Whiteboard-SDK-Common-Issues-and-Solutions
