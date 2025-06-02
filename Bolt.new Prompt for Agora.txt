@@ -1,0 +1,15 @@
+Create a full-stack web application using React for the frontend and Node.js with Express for the backend. The application should integrate with Agora.io to provide the following features:
+
+1. Interactive Live Streaming: Use the Agora RTC Web SDK to enable real-time video and audio streaming.
+2. Flexible Classroom Environment: Implement features similar to a virtual classroom, including video conferencing, screen sharing, and participant management using the Agora RTC Web SDK.
+3. Chat Functionality: Integrate the Agora RTM Web SDK for real-time messaging between users.
+4. Interactive Whiteboard: Use the Agora Interactive Whiteboard Web SDK to allow collaborative drawing and annotation.
+
+For the backend:
+- Install and use the `agora-token` npm package to generate tokens for Agora RTC and RTM services.
+- Implement API endpoints to generate these tokens when requested by the frontend.
+- For the Interactive Whiteboard, implement token generation using the appropriate method, referencing Agora's documentation for generating Room Tokens and SDK Tokens.
+
+Ensure that the application is set up to be production-ready, with proper error handling, security measures, and dynamic key generation for all integrated Agora services.
+
+Please structure the application with clear separation between frontend and backend, and provide necessary code for integrating each Agora SDK feature.
